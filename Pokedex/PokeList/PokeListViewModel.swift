@@ -6,18 +6,18 @@ class PokeListViewModel {
     private(set) var viewModels: [PokeListCellViewModel] = []
     let searchBarViewModel: PokeListSearchBarViewModel
     private var next: String?
-    
+
     var onUpdate: ([IndexPath]) -> Void = { _ in }
     var onError: (Error) -> Void = { _ in }
     var onSelect: (PokePreview) -> Void = { _ in }
-    
+
     init(network: NetworkContextProtocol,
          coordinator: PokeListCoordinatorProtocol) {
         self.network = network
         self.coordinator = coordinator
         self.searchBarViewModel = PokeListSearchBarViewModel(network: network)
     }
-    
+
     func load() {
         network.getPokemonList(completion: { [weak self] result in
             switch result {
@@ -28,11 +28,11 @@ class PokeListViewModel {
             }
         })?.execute()
     }
-    
+
     func loadNext(_ indexPath: IndexPath) {
         guard let next = next else { return }
         guard indexPath.row == viewModels.count - 1 else { return }
-        
+
         network.getPokemonList(with: next, completion: { [weak self] result in
             switch result {
             case let .success(list):
@@ -42,12 +42,12 @@ class PokeListViewModel {
             }
         })?.execute()
     }
-    
+
     private func loadSucceeded(_ result: PokePreviewList) {
         let paths = Array(viewModels.count..<(viewModels.count + result.results.count))
             .map({ IndexPath(row: $0, section: 0) })
-        
-        viewModels = viewModels + result
+
+        viewModels += result
             .results
             .map({ PokeListCellViewModel.init(network: network,
                                               preview: $0,
@@ -55,7 +55,7 @@ class PokeListViewModel {
         next = result.next
         onUpdate(paths)
     }
-    
+
     private func loadFailed(_ error: Error) {
         onError(error)
     }
